@@ -29,7 +29,9 @@ public:
 		auto image = m_Renderer.GetFinalImage();
 		if (image)
 		{
-			ImGui::Image(image->GetDescriptorSet(), {(float)image->GetWidth(), (float)image->GetHeight()});
+			ImGui::Image(image->GetDescriptorSet(),
+						 {(float)image->GetWidth(), (float)image->GetHeight()},
+						 ImVec2(0, 1), ImVec2(1, 0));
 		}
 
 		ImGui::End();
@@ -55,15 +57,15 @@ private:
 	float m_LastRenderTime = 0.0f;
 };
 
-Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
+Walnut::Application *Walnut::CreateApplication(int argc, char **argv)
 {
 	Walnut::ApplicationSpecification spec;
 	spec.Name = "Walnut Example";
 
-	Walnut::Application* app = new Walnut::Application(spec);
+	Walnut::Application *app = new Walnut::Application(spec);
 	app->PushLayer<ExampleLayer>();
 	app->SetMenubarCallback([app]()
-	{
+							{
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Exit"))
@@ -71,7 +73,6 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 				app->Close();
 			}
 			ImGui::EndMenu();
-		}
-	});
+		} });
 	return app;
 }
