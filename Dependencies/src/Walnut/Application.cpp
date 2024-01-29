@@ -28,7 +28,7 @@ extern bool g_ApplicationRunning;
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-//#define IMGUI_UNLIMITED_FRAME_RATE
+#define IMGUI_UNLIMITED_FRAME_RATE
 #ifdef _DEBUG
 #define IMGUI_VULKAN_DEBUG_REPORT
 #endif
@@ -294,7 +294,7 @@ static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 		err = vkResetFences(g_Device, 1, &fd->Fence);
 		check_vk_result(err);
 	}
-	
+
 	{
 		// Free resources in queue
 		for (auto& func : s_ResourceFreeQueue[s_CurrentFrameIndex])

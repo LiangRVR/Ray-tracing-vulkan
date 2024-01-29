@@ -21,7 +21,7 @@ namespace Walnut {
 				if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & (1 << i))
 					return i;
 			}
-			
+
 			return 0xffffffff;
 		}
 
@@ -34,7 +34,7 @@ namespace Walnut {
 			}
 			return 0;
 		}
-		
+
 		static VkFormat WalnutFormatToVulkanFormat(ImageFormat format)
 		{
 			switch (format)
@@ -66,9 +66,10 @@ namespace Walnut {
 
 		m_Width = width;
 		m_Height = height;
-		
+
 		AllocateMemory(m_Width * m_Height * Utils::BytesPerPixel(m_Format));
 		SetData(data);
+		stbi_image_free(data);
 	}
 
 	Image::Image(uint32_t width, uint32_t height, ImageFormat format, const void* data)
@@ -89,7 +90,7 @@ namespace Walnut {
 		VkDevice device = Application::GetDevice();
 
 		VkResult err;
-		
+
 		VkFormat vulkanFormat = Utils::WalnutFormatToVulkanFormat(m_Format);
 
 		// Create the Image
