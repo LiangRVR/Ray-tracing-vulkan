@@ -73,6 +73,7 @@ public:
 		{
 			m_Renderer.ResetFrameIndex();
 		}
+		optionsChanged += ImGui::SliderInt("Bounces", &m_Renderer.m_Bounces, 1, 64);
 
 		ImGui::End();
 
@@ -91,7 +92,7 @@ public:
 			Sphere &sphere = m_Scene.Spheres[i];
 			ImGui::PushID(static_cast<int>(i));
 			ImGui::Text("Sphere %d", static_cast<int>(i + 1));
-		 	optionsChanged += ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.1f);
+			optionsChanged += ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.1f);
 			optionsChanged += ImGui::DragFloat("Radius", &sphere.Radius, 0.1f, 0.0f);
 			optionsChanged += ImGui::DragInt("Material", &sphere.MaterialIndex, 1.0f, 0, (int)m_Scene.Materials.size() - 1);
 			if (ImGui::Button("Delete"))
@@ -132,7 +133,7 @@ public:
 		m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 		m_ViewportHeight = ImGui::GetContentRegionAvail().y;
 
-		if(optionsChanged)
+		if (optionsChanged)
 			m_Renderer.ResetFrameIndex();
 
 		auto image = m_Renderer.GetFinalImage();

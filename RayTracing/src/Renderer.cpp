@@ -143,7 +143,7 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
     glm::vec3 light(0.0f);
     glm::vec3 contribution(1.0f);
 
-    int bounces = 20;
+    int bounces = m_Bounces;
     for (int i = 0; i < bounces; i++)
     {
         Renderer::HitPayload payload = TraceRay(ray);

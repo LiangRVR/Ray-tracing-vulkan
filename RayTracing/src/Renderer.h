@@ -17,6 +17,7 @@ public:
     {
         bool Accumulate = true;
     };
+    int m_Bounces = 5;
 
 public:
     Renderer() = default;
@@ -58,4 +59,5 @@ private:
     glm::vec4 *m_AccumulationData = nullptr;
 
     uint32_t m_FrameIndex = 1;
+
 };
