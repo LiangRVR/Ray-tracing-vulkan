@@ -21,5 +21,5 @@ public:
 
     virtual void ClosestHit(const Ray &ray, HitPayload &payload) const = 0;
 
-    virtual bool RenderObjectOptions(){};
+    virtual bool RenderObjectOptions() { return false; }
 };
