@@ -8,8 +8,11 @@
 
 #include "Renderer.h"
 #include "Camera.h"
+#include "Sphere.h"
 
 using namespace Walnut;
+using std::make_shared;
+using std::shared_ptr;
 class ExampleLayer : public Walnut::Layer
 {
 public:
@@ -30,25 +33,25 @@ public:
 		orangeSphere.EmissionPower = 1.0f;
 
 		{
-			Sphere sphere;
-			sphere.Position = {0.0f, 0.0f, 0.0f};
-			sphere.Radius = 1.0f;
-			sphere.MaterialIndex = 0;
-			m_Scene.Spheres.push_back(sphere);
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {0.0f, 0.0f, 0.0f};
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = 0;
+			m_Scene.Hittables.add(sphere);
 		}
 		{
-			Sphere sphere;
-			sphere.Position = {2.0f, 0.0f, 0.0f};
-			sphere.Radius = 1.0f;
-			sphere.MaterialIndex = 2;
-			m_Scene.Spheres.push_back(sphere);
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {2.0f, 0.0f, 0.0f};
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = 2;
+			m_Scene.Hittables.add(sphere);
 		}
 		{
-			Sphere sphere;
-			sphere.Position = {0.0f, -101.0f, 0.0f};
-			sphere.Radius = 100.0f;
-			sphere.MaterialIndex = 1;
-			m_Scene.Spheres.push_back(sphere);
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {0.0f, -101.0f, 0.0f};
+			sphere->Radius = 100.0f;
+			sphere->MaterialIndex = 1;
+			m_Scene.Hittables.add(sphere);
 		}
 	}
 
@@ -80,24 +83,21 @@ public:
 		ImGui::Begin("Scene");
 		if (ImGui::Button("Add Sphere"))
 		{
-			Sphere sphere;
-			sphere.Position = {0.0f, 0.0f, 0.0f};
-			sphere.Radius = 0.5f;
-			sphere.MaterialIndex = 0;
-			m_Scene.Spheres.push_back(sphere);
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {0.0f, 0.0f, 0.0f};
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = 0;
+			m_Scene.Hittables.add(sphere);
 		}
 
-		for (size_t i = 0; i < m_Scene.Spheres.size(); i++)
+		for (size_t i = 0; i < m_Scene.Hittables.objects.size(); i++)
 		{
-			Sphere &sphere = m_Scene.Spheres[i];
+			// Sphere &sphere = m_Scene.Spheres[i];
 			ImGui::PushID(static_cast<int>(i));
-			ImGui::Text("Sphere %d", static_cast<int>(i + 1));
-			optionsChanged += ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.1f);
-			optionsChanged += ImGui::DragFloat("Radius", &sphere.Radius, 0.1f, 0.0f);
-			optionsChanged += ImGui::DragInt("Material", &sphere.MaterialIndex, 1.0f, 0, (int)m_Scene.Materials.size() - 1);
+			optionsChanged += m_Scene.Hittables.objects[i]->RenderObjectOptions();
 			if (ImGui::Button("Delete"))
 			{
-				m_Scene.Spheres.erase(m_Scene.Spheres.begin() + i);
+				m_Scene.Hittables.objects.erase(m_Scene.Hittables.objects.begin() + i);
 				i--; // Decrement i to account for the erased element
 			}
 			ImGui::Separator();

@@ -1,4 +1,4 @@
-file(GLOB_RECURSE RayTracing_SRC LIST_DIRECTORIES false src/*.cpp)
+file(GLOB_RECURSE RayTracing_SRC LIST_DIRECTORIES false src/*.h src/*.cpp )
 
 add_executable(RayTracing ${RayTracing_SRC})
 target_include_directories(RayTracing PRIVATE src)

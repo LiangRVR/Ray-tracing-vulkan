@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Ray.h"
 #include "Scene.h"
+#include "Hittable.h"
 
 #include <memory>
 #include <execution>
@@ -31,19 +32,10 @@ public:
     Settings &GetSettings() { return m_Settings; }
 
 private:
-    struct HitPayload
-    {
-        float HitDistance;
-        glm::vec3 WorldPosition;
-        glm::vec3 WorldNormal;
-
-        int ObjectIndex;
-    };
-
     glm::vec4 PerPixel(uint32_t x, uint32_t y); // RayGen
 
     HitPayload TraceRay(const Ray &ray);
-    HitPayload ClosestHit(const Ray &ray, float hitDistance, int objectIndex);
+    HitPayload ClosestHit(const Ray &ray, HitPayload &payload);
     HitPayload Miss(const Ray &ray);
 
 private:
