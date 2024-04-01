@@ -17,14 +17,16 @@ public:
     struct Settings
     {
         bool Accumulate = true;
+        bool EnableAntialiasing = false;
     };
     int m_Bounces = 5;
+    int m_Samples = 1;
 
 public:
     Renderer() = default;
 
     void OnResize(uint32_t width, uint32_t height);
-    void Render(const Scene &scene, const Camera &camera);
+    void Render(const Scene &scene, Camera &camera);
 
     std::shared_ptr<Walnut::Image> GetFinalImage() const { return m_FinalImage; }
 
@@ -45,7 +47,7 @@ private:
     std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter;
 
     const Scene *m_ActiveScene = nullptr;
-    const Camera *m_ActiveCamera = nullptr;
+    Camera *m_ActiveCamera = nullptr;
 
     uint32_t *m_ImageData = nullptr;
     glm::vec4 *m_AccumulationData = nullptr;

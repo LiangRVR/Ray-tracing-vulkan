@@ -5,6 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Walnut/Input/Input.h"
+#include "Walnut/Random.h"
 
 using namespace Walnut;
 
@@ -135,4 +136,22 @@ void Camera::RecalculateRayDirections()
             m_RayDirections[x + y * m_ViewportWidth] = rayDirection;
         }
     }
+}
+
+void Camera::GetRayDirectionNearCurrentPosition(uint32_t x, uint32_t y)
+{
+    glm::vec2 coord = {x / (float)m_ViewportWidth, y / (float)m_ViewportHeight};
+    float pixelSize = 1.0f / glm::min(m_ViewportWidth, m_ViewportHeight);
+    float offsetX = (Walnut::Random::UInt() % 100) / 100.0f * pixelSize;
+    float offsetY = (Walnut::Random::UInt() % 100) / 100.0f * pixelSize;
+
+    coord.x += offsetX;
+    coord.y += offsetY;
+
+    coord = coord * 2.0f - 1.0f; // -1 -> 1
+
+    glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, 1, 1);
+    glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
+
+    m_RayRandomDirection = rayDirection;
 }

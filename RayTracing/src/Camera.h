@@ -21,6 +21,16 @@ public:
 
     const std::vector<glm::vec3> &GetRayDirections() const { return m_RayDirections; }
 
+    const uint32_t GetViewportWidth() const { return m_ViewportWidth; }
+    const uint32_t GetViewportHeight() const { return m_ViewportHeight; }
+
+    void GetRayDirectionNearCurrentPosition(uint32_t x, uint32_t y);
+    const glm::vec3 &GetRandomRayDirection(uint32_t x, uint32_t y)
+    {
+        GetRayDirectionNearCurrentPosition(x, y);
+        return m_RayRandomDirection;
+    }
+
     float GetRotationSpeed();
 
 private:
@@ -43,6 +53,9 @@ private:
 
     // Cached ray directions
     std::vector<glm::vec3> m_RayDirections;
+
+    // Random directions for antialiasing
+    glm::vec3 m_RayRandomDirection;
 
     glm::vec2 m_LastMousePosition{0.0f, 0.0f};
 

@@ -78,6 +78,12 @@ public:
 		}
 		optionsChanged += ImGui::SliderInt("Bounces", &m_Renderer.m_Bounces, 1, 64);
 
+		optionsChanged += ImGui::Checkbox("Antialiasing", &m_Renderer.GetSettings().EnableAntialiasing);
+		if (m_Renderer.GetSettings().EnableAntialiasing)
+		{
+			optionsChanged += ImGui::SliderInt("Samples", &m_Renderer.m_Samples, 1, 16);
+		}
+
 		ImGui::End();
 
 		ImGui::Begin("Scene");

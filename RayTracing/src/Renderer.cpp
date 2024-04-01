@@ -79,7 +79,7 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 #endif
 }
 
-void Renderer::Render(const Scene &scene, const Camera &camera)
+void Renderer::Render(const Scene &scene, Camera &camera)
 {
     m_ActiveScene = &scene;
     m_ActiveCamera = &camera;
@@ -136,37 +136,52 @@ void Renderer::Render(const Scene &scene, const Camera &camera)
 
 glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
 {
-    Ray ray;
-    ray.Origin = m_ActiveCamera->GetPosition();
-    ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-
+    int numSamples = m_Samples;
     glm::vec3 light(0.0f);
-    glm::vec3 contribution(1.0f);
 
-    int bounces = m_Bounces;
-    for (int i = 0; i < bounces; i++)
+    for (int s = 0; s < numSamples; s++)
     {
-        HitPayload payload = TraceRay(ray);
-        if (payload.HitDistance < 0.0f)
+        Ray ray;
+        ray.Origin = m_ActiveCamera->GetPosition();
+        if(m_Settings.EnableAntialiasing)
         {
-            glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
-            light += skyColor * contribution;
-            break;
+            ray.Direction = m_ActiveCamera->GetRandomRayDirection(x, y);
+        }
+        else
+        {
+            ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
         }
 
-        const int materialIndex = payload.materialIndex;
-        const Material &material = m_ActiveScene->Materials[materialIndex];
+        glm::vec3 contribution(1.0f);
 
-        contribution *= material.Albedo;
-        light += material.GetEmission();
+        int bounces = m_Bounces;
+        int i = 0;
+        while (i < bounces)
+        {
+            HitPayload payload = TraceRay(ray);
+            if (payload.HitDistance < 0.0f)
+            {
+                glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
+                light += skyColor * contribution;
+                i = bounces; // Exit the loop
+            }
+            else
+            {
+                const int materialIndex = payload.materialIndex;
+                const Material &material = m_ActiveScene->Materials[materialIndex];
 
-        ray.Origin = payload.position + payload.normal * 0.0001f;
-        // glm::vec3 random_vector = payload.WorldNormal + material.Roughness * Walnut::Random::Vec3(-0.5f, 0.5f);
-        /*  glm::vec3 random_vector = payload.WorldNormal + material.Roughness * Walnut::Random::InUnitSphere();
-         ray.Direction = glm::reflect(ray.Direction,
-                                      random_vector); */
-        ray.Direction = glm::normalize(payload.normal + material.Roughness * Walnut::Random::InUnitSphere());
+                contribution *= material.Albedo;
+                light += material.GetEmission();
+
+                ray.Origin = payload.position + payload.normal * 0.0001f;
+                ray.Direction = glm::normalize(payload.normal + material.Roughness * Walnut::Random::InUnitSphere());
+
+                i++;
+            }
+        }
     }
+
+    light /= static_cast<float>(numSamples); // Average the accumulated light samples
 
     return glm::vec4(light, 1.0f);
 }
