@@ -105,6 +105,8 @@ public:
 
 		ImGui::Begin("Scene");
 		ImGui::Separator();
+		optionsChanged += ImGui::ColorEdit3("Sky Color", &m_Scene.SkyColor.x);
+		ImGui::Separator();
 		ImGui::Text("Objects");
 		ImGui::Separator();
 		if (ImGui::Button("Add Sphere"))

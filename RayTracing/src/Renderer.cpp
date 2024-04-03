@@ -128,8 +128,7 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
             HitPayload payload = TraceRay(ray);
             if (payload.HitDistance < 0.0f)
             {
-                glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
-                color += skyColor * contribution;
+                color += m_ActiveScene->SkyColor * contribution;
                 i = bounces; // Exit the loop
             }
             else

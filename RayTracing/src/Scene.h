@@ -14,4 +14,6 @@ struct Scene
     std::vector<shared_ptr<Hittable>> objects;
 
     std::vector<shared_ptr<Material>> Materials;
+
+    glm::vec3 SkyColor{0.6f, 0.7f, 0.9f};
 };
