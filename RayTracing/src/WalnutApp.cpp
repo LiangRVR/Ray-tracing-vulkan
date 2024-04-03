@@ -18,39 +18,56 @@ class ExampleLayer : public Walnut::Layer
 public:
 	ExampleLayer() : m_Camera(45.0f, 0.1f, 100.0f)
 	{
-		Material &pinkSphere = m_Scene.Materials.emplace_back();
-		pinkSphere.Albedo = {1.0f, 0.0f, 1.0f};
-		pinkSphere.Roughness = 0.0f;
+		auto materialGround = make_shared<Lambertian>("Ground");
+		materialGround->Albedo = {0.8f, 0.8f, 0.0f};
+		materialGround->Roughness = 1.0f;
+		m_Scene.Materials.push_back(materialGround);
+		m_MaterialNames.push_back(materialGround->Name);
 
-		Material &blueSphere = m_Scene.Materials.emplace_back();
-		blueSphere.Albedo = {0.2f, 0.3f, 1.0f};
-		blueSphere.Roughness = 0.1f;
+		auto materialCenter = make_shared<Lambertian>("center sphere");
+		materialCenter->Albedo = {0.7f, 0.3f, 0.3f};
+		materialCenter->Roughness = 1.0f;
+		m_Scene.Materials.push_back(materialCenter);
+		m_MaterialNames.push_back(materialCenter->Name);
 
-		Material &orangeSphere = m_Scene.Materials.emplace_back();
-		orangeSphere.Albedo = {0.8f, 0.5f, 0.2f};
-		orangeSphere.Roughness = 0.1f;
-		orangeSphere.EmissionColor = orangeSphere.Albedo;
-		orangeSphere.EmissionPower = 1.0f;
+		auto materialLeft = make_shared<Metal>("left sphere");
+		materialLeft->Albedo = {0.8f, 0.8f, 0.8f};
+		materialLeft->Fuzz = 0.0f;
+		m_Scene.Materials.push_back(materialLeft);
+		m_MaterialNames.push_back(materialLeft->Name);
+
+		auto materialRight = make_shared<Metal>("right sphere");
+		materialRight->Albedo = {0.8f, 0.6f, 0.2f};
+		materialRight->Fuzz = 0.0f;
+		m_Scene.Materials.push_back(materialRight);
+		m_MaterialNames.push_back(materialRight->Name);
 
 		{
 			auto sphere = make_shared<Sphere>();
-			sphere->Position = {0.0f, 0.0f, 0.0f};
-			sphere->Radius = 1.0f;
+			sphere->Position = {0.0f, -100.5f, -1.0f};
+			sphere->Radius = 100.0f;
 			sphere->MaterialIndex = 0;
 			m_Scene.Hittables.add(sphere);
 		}
 		{
 			auto sphere = make_shared<Sphere>();
-			sphere->Position = {2.0f, 0.0f, 0.0f};
-			sphere->Radius = 1.0f;
+			sphere->Position = {0.0f, 0.0f, -1.0f};
+			sphere->Radius = 0.5f;
+			sphere->MaterialIndex = 1;
+			m_Scene.Hittables.add(sphere);
+		}
+		{
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {-1.0f, 0.0f, -1.0f};
+			sphere->Radius = 0.5f;
 			sphere->MaterialIndex = 2;
 			m_Scene.Hittables.add(sphere);
 		}
 		{
 			auto sphere = make_shared<Sphere>();
-			sphere->Position = {0.0f, -101.0f, 0.0f};
-			sphere->Radius = 100.0f;
-			sphere->MaterialIndex = 1;
+			sphere->Position = {1.0f, 0.0f, -1.0f};
+			sphere->Radius = 0.5f;
+			sphere->MaterialIndex = 3;
 			m_Scene.Hittables.add(sphere);
 		}
 	}
@@ -87,6 +104,9 @@ public:
 		ImGui::End();
 
 		ImGui::Begin("Scene");
+		ImGui::Separator();
+		ImGui::Text("Objects");
+		ImGui::Separator();
 		if (ImGui::Button("Add Sphere"))
 		{
 			auto sphere = make_shared<Sphere>();
@@ -98,14 +118,19 @@ public:
 
 		for (size_t i = 0; i < m_Scene.Hittables.objects.size(); i++)
 		{
-			// Sphere &sphere = m_Scene.Spheres[i];
 			ImGui::PushID(static_cast<int>(i));
-			optionsChanged += m_Scene.Hittables.objects[i]->RenderObjectOptions();
-			if (ImGui::Button("Delete"))
+			if (ImGui::TreeNode(("Sphere " + std::to_string(i + 1)).c_str()))
 			{
-				m_Scene.Hittables.objects.erase(m_Scene.Hittables.objects.begin() + i);
-				i--; // Decrement i to account for the erased element
+				optionsChanged += m_Scene.Hittables.objects[i]->RenderObjectOptions(m_MaterialNames);
+				if (ImGui::Button("Delete"))
+				{
+					m_Scene.Hittables.objects.erase(m_Scene.Hittables.objects.begin() + i);
+					i--; // Decrement i to account for the erased element
+					optionsChanged++;
+				}
+				ImGui::TreePop();
 			}
+
 			ImGui::Separator();
 
 			ImGui::PopID();
@@ -114,23 +139,35 @@ public:
 		ImGui::Separator();
 		ImGui::Text("Materials");
 		ImGui::Separator();
+		if (ImGui::Button("Add Lambertian Material"))
+		{
+			auto material = make_shared<Lambertian>("Lambertian " + std::to_string(m_Scene.Materials.size() + 1));
+			m_Scene.Materials.push_back(material);
+			m_MaterialNames.push_back(material->Name);
+		}
+
+		if (ImGui::Button("Add Metal Material"))
+		{
+			auto material = make_shared<Metal>("Metal " + std::to_string(m_Scene.Materials.size() + 1));
+			m_Scene.Materials.push_back(material);
+			m_MaterialNames.push_back(material->Name);
+		}
 
 		for (size_t i = 0; i < m_Scene.Materials.size(); i++)
 		{
-			ImGui::Text("Materials %d", static_cast<int>(i));
-
-			Material &material = m_Scene.Materials[i];
 			ImGui::PushID(static_cast<int>(i));
-			optionsChanged += ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
-			optionsChanged += ImGui::DragFloat("Roughness", &material.Roughness, 0.05f, 0.0f, 1.0f);
-			optionsChanged += ImGui::DragFloat("Metallic", &material.Metallic, 0.05f, 0.0f, 1.0f);
-			optionsChanged += ImGui::ColorEdit3("Emission Color", glm::value_ptr(material.EmissionColor));
-			optionsChanged += ImGui::DragFloat("Emission Power", &material.EmissionPower, 0.05f, 0.0f, FLT_MAX);
+			if (ImGui::TreeNode((m_MaterialNames.at(i).c_str())))
+			{
+				auto material = m_Scene.Materials[i];
+				ImGui::PushID(static_cast<int>(i));
+				optionsChanged += material->RenderObjectOptions();
 
+				ImGui::TreePop();
+			}
 			ImGui::Separator();
-
 			ImGui::PopID();
 		}
+
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -172,6 +209,7 @@ private:
 	Renderer m_Renderer;
 	Scene m_Scene;
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+	std::vector<std::string> m_MaterialNames;
 
 	float m_LastRenderTime = 0.0f;
 };

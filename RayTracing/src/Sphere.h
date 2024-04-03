@@ -16,5 +16,14 @@ public:
 
     void ClosestHit(const Ray &ray, HitPayload &payload) const override;
 
-    bool RenderObjectOptions() override;
+    bool RenderObjectOptions(std::vector<std::string> &materialNames) override;
+
+    void setMaterialIndex(int newMaterialIndex) override
+    {
+        MaterialIndex = newMaterialIndex;
+    }
+    int getMaterialIndex() override
+    {
+        return MaterialIndex;
+    }
 };

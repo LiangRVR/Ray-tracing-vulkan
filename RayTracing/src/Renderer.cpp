@@ -4,18 +4,16 @@
 
 #include <bits/stdc++.h>
 
-#define MT_OpenMP 1
-#define MT_TBB 0
-
 namespace Utils
 {
 
     static uint32_t ConvertToRGBA(const glm::vec4 &color)
     {
-        uint8_t r = (uint8_t)(color.r * 255.0f);
-        uint8_t g = (uint8_t)(color.g * 255.0f);
-        uint8_t b = (uint8_t)(color.b * 255.0f);
-        uint8_t a = (uint8_t)(color.a * 255.0f);
+        glm::vec4 linearToGamma = glm::pow(color, glm::vec4(1.0f / 2.2f));
+        uint8_t r = (uint8_t)(linearToGamma.r * 255.0f);
+        uint8_t g = (uint8_t)(linearToGamma.g * 255.0f);
+        uint8_t b = (uint8_t)(linearToGamma.b * 255.0f);
+        uint8_t a = (uint8_t)(linearToGamma.a * 255.0f);
 
         uint32_t result = (a << 24) | (b << 16) | (g << 8) | r;
         return result;
@@ -66,17 +64,6 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
     m_ImageHorizontalIter.resize(width);
     m_ImageVerticalIter.resize(height);
-
-#if MT_TBB
-    uint32_t greatest = std::max(width, height);
-    for (uint32_t i = 0; i < greatest; i++)
-    {
-        if (i < width)
-            m_ImageHorizontalIter[i] = i;
-        if (i < height)
-            m_ImageVerticalIter[i] = i;
-    }
-#endif
 }
 
 void Renderer::Render(const Scene &scene, Camera &camera)
@@ -87,29 +74,8 @@ void Renderer::Render(const Scene &scene, Camera &camera)
     if (m_FrameIndex == 1)
         memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec4));
 
-#if MT_TBB
-
-    std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
-                  [this](uint32_t y)
-                  {
-                      std::for_each(std::execution::par, m_ImageHorizontalIter.begin(), m_ImageHorizontalIter.end(),
-                                    [this, y](uint32_t x)
-                                    {
-                                        glm::vec4 color = PerPixel(x, y);
-                                        m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
-
-                                        glm::vec4 accumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
-                                        accumulatedColor /= (float)m_FrameIndex;
-
-                                        accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
-                                        m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
-                                    });
-                  });
-#elif MT_OpenMP
 #pragma omp parallel for
-#endif
 
-#if !MT_TBB
     for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
     {
         for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
@@ -124,7 +90,6 @@ void Renderer::Render(const Scene &scene, Camera &camera)
             m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
         }
     }
-#endif
 
     m_FinalImage->SetData(m_ImageData);
 
@@ -137,13 +102,13 @@ void Renderer::Render(const Scene &scene, Camera &camera)
 glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
 {
     int numSamples = m_Samples;
-    glm::vec3 light(0.0f);
+    glm::vec3 color(0.0f);
 
     for (int s = 0; s < numSamples; s++)
     {
         Ray ray;
         ray.Origin = m_ActiveCamera->GetPosition();
-        if(m_Settings.EnableAntialiasing)
+        if (m_Settings.EnableAntialiasing)
         {
             ray.Direction = m_ActiveCamera->GetRandomRayDirection(x, y);
         }
@@ -158,32 +123,39 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
         int i = 0;
         while (i < bounces)
         {
+            glm::vec3 attenuation(1.0f);
+            glm::vec3 scatteredDirection(0.0f);
             HitPayload payload = TraceRay(ray);
             if (payload.HitDistance < 0.0f)
             {
                 glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
-                light += skyColor * contribution;
+                color += skyColor * contribution;
                 i = bounces; // Exit the loop
             }
             else
             {
                 const int materialIndex = payload.materialIndex;
-                const Material &material = m_ActiveScene->Materials[materialIndex];
+                const std::shared_ptr<Material> &material = m_ActiveScene->Materials.at(materialIndex);
 
-                contribution *= material.Albedo;
-                light += material.GetEmission();
+                if (material->scatter(ray, payload, attenuation, scatteredDirection))
+                {
+                    ray.Origin = payload.position;
+                    ray.Direction = scatteredDirection;
 
-                ray.Origin = payload.position + payload.normal * 0.0001f;
-                ray.Direction = glm::normalize(payload.normal + material.Roughness * Walnut::Random::InUnitSphere());
-
-                i++;
+                    contribution *= attenuation;
+                    i++;
+                }
+                else
+                {
+                    i = bounces; // Exit the loop
+                }
             }
         }
     }
 
-    light /= static_cast<float>(numSamples); // Average the accumulated light samples
+    color /= static_cast<float>(numSamples); // Average the accumulated color samples
 
-    return glm::vec4(light, 1.0f);
+    return glm::vec4(color, 1.0f);
 }
 
 HitPayload Renderer::TraceRay(const Ray &ray)

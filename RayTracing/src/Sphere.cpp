@@ -19,7 +19,6 @@ bool Sphere::hit(const Ray &ray, float tMin, float tMax, HitPayload &payload) co
     // Quadratic formula:
     // (-b +- sqrt(discriminant)) / 2a
 
-    // float t0 = (-b + glm::sqrt(discriminant)) / (2.0f * a); // Second hit distance (currently unused)
     float t = (-b - glm::sqrt(discriminant)) / (2.0f * a);
     if (t <= tMin || tMax <= t)
     {
@@ -34,21 +33,42 @@ bool Sphere::hit(const Ray &ray, float tMin, float tMax, HitPayload &payload) co
 
 void Sphere::ClosestHit(const Ray &ray, HitPayload &payload) const
 {
-    glm::vec3 origin = ray.Origin - Position;
+    /* glm::vec3 origin = ray.Origin - Position;
     payload.position = origin + ray.Direction * payload.HitDistance;
     payload.normal = glm::normalize(payload.position);
 
-    payload.position += Position;
+    payload.position += Position; */
+    payload.position = ray.Origin + ray.Direction * payload.HitDistance;
+    glm::vec3 outwardNormal = (payload.position - Position) / Radius;
+    payload.setFaceNormal(ray, outwardNormal);
+
     payload.materialIndex = MaterialIndex;
 }
 
-bool Sphere::RenderObjectOptions()
+bool Sphere::RenderObjectOptions(std::vector<std::string> &materialNames)
 {
     int optionChanged = 0;
-    ImGui::Text("Sphere");
-    optionChanged += ImGui::SliderFloat3("Position", &Position.x, -10.0f, 10.0f, "%.1f");
-    optionChanged += ImGui::SliderFloat("Radius", &Radius, 0.0f, 10.0f);
-    optionChanged += ImGui::SliderInt("Material Index", &MaterialIndex, 0, 2);
+    optionChanged += ImGui::DragFloat3("Position", &Position.x, 0.1f);
+    optionChanged += ImGui::DragFloat("Radius", &Radius, 0.1f, 0.0f, 1000.0f);
+    std::string combo_preview_value = materialNames.at(MaterialIndex);
+    if (ImGui::BeginCombo("Material", combo_preview_value.c_str()))
+    {
+        for (int n = 0; n < materialNames.size(); n++)
+        {
+            const bool is_selected = (MaterialIndex == n);
+            if (ImGui::Selectable(materialNames.at(n).c_str(), is_selected))
+            {
+                MaterialIndex = n;
+                optionChanged += 1;
+            }
+
+
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
 
     return optionChanged > 0;
 }

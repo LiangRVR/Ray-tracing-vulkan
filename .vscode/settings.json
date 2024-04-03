@@ -1,9 +1,7 @@
 {
-    "cSpell.words": [
-        "antialiasing"
-    ],
     "files.associations": {
         "*.css": "tailwindcss",
+        "random": "cpp",
         "any": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -54,7 +52,6 @@
         "memory_resource": "cpp",
         "numeric": "cpp",
         "optional": "cpp",
-        "random": "cpp",
         "ratio": "cpp",
         "regex": "cpp",
         "source_location": "cpp",
