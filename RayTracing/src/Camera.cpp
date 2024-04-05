@@ -5,7 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Walnut/Input/Input.h"
-#include "Walnut/Random.h"
+#include "Utils.h"
 
 using namespace Walnut;
 
@@ -142,8 +142,8 @@ void Camera::GetRayDirectionNearCurrentPosition(uint32_t x, uint32_t y)
 {
     glm::vec2 coord = {x / (float)m_ViewportWidth, y / (float)m_ViewportHeight};
     float pixelSize = 1.0f / glm::min(m_ViewportWidth, m_ViewportHeight);
-    float offsetX = (Walnut::Random::UInt() % 100) / 100.0f * pixelSize;
-    float offsetY = (Walnut::Random::UInt() % 100) / 100.0f * pixelSize;
+    float offsetX = (Utils::UInt() % 100) / 100.0f * pixelSize;
+    float offsetY = (Utils::UInt() % 100) / 100.0f * pixelSize;
 
     coord.x += offsetX;
     coord.y += offsetY;

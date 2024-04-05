@@ -55,22 +55,6 @@ namespace Walnut
 			return p;
 		} */
 
-		/* static glm::vec3 InUnitSphere()
-		{
-			float theta = 2 * M_PI * Float(); // azimuthal angle
-			float temp = 2 * Float() - 1;
-			temp = temp < -1 ? -1 : temp > 1 ? 1
-											 : temp; // ensure temp is within [-1, 1]
-			float phi = acos(temp);					 // polar angle
-			float r = cbrt(Float());				 // cube root of a random float to ensure uniform distribution
-
-			float x = r * sin(phi) * cos(theta);
-			float y = r * sin(phi) * sin(theta);
-			float z = r * cos(phi);
-
-			return glm::vec3(x, y, z);
-		} */
-
 		static glm::vec3 UnitVector()
 		{
 			return glm::normalize(InUnitSphere());

@@ -24,7 +24,7 @@ public:
 		m_Scene.Materials.push_back(materialGround);
 		m_MaterialNames.push_back(materialGround->Name);
 
-		auto materialCenter = make_shared<Lambertian>("center sphere");
+		/* auto materialCenter = make_shared<Lambertian>("center sphere");
 		materialCenter->Albedo = {0.7f, 0.3f, 0.3f};
 		materialCenter->Roughness = 1.0f;
 		m_Scene.Materials.push_back(materialCenter);
@@ -33,6 +33,17 @@ public:
 		auto materialLeft = make_shared<Metal>("left sphere");
 		materialLeft->Albedo = {0.8f, 0.8f, 0.8f};
 		materialLeft->Fuzz = 0.0f;
+		m_Scene.Materials.push_back(materialLeft);
+		m_MaterialNames.push_back(materialLeft->Name); */
+
+		auto materialCenter = make_shared<Lambertian>("center sphere");
+		materialCenter->Albedo = {0.7f, 0.3f, 0.3f};
+		materialCenter->Roughness = 1.0f;
+		m_Scene.Materials.push_back(materialCenter);
+		m_MaterialNames.push_back(materialCenter->Name);
+
+			auto materialLeft = make_shared<Dielectric>("left sphere");
+		materialLeft->IndexOfRefraction = 1.5f;
 		m_Scene.Materials.push_back(materialLeft);
 		m_MaterialNames.push_back(materialLeft->Name);
 
@@ -59,7 +70,7 @@ public:
 		{
 			auto sphere = make_shared<Sphere>();
 			sphere->Position = {-1.0f, 0.0f, -1.0f};
-			sphere->Radius = 0.5f;
+			sphere->Radius = -0.4f;
 			sphere->MaterialIndex = 2;
 			m_Scene.Hittables.add(sphere);
 		}
@@ -93,12 +104,12 @@ public:
 		{
 			m_Renderer.ResetFrameIndex();
 		}
-		optionsChanged += ImGui::SliderInt("Bounces", &m_Renderer.m_Bounces, 1, 64);
+		optionsChanged += ImGui::DragInt("Bounces", &m_Renderer.m_Bounces, 0.5f, 1, 64);
 
 		optionsChanged += ImGui::Checkbox("Antialiasing", &m_Renderer.GetSettings().EnableAntialiasing);
 		if (m_Renderer.GetSettings().EnableAntialiasing)
 		{
-			optionsChanged += ImGui::SliderInt("Samples", &m_Renderer.m_Samples, 1, 16);
+			optionsChanged += ImGui::DragInt("Samples", &m_Renderer.m_Samples, 0.5f, 1, 100);
 		}
 
 		ImGui::End();
