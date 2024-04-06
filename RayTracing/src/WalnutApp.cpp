@@ -13,74 +13,12 @@
 using namespace Walnut;
 using std::make_shared;
 using std::shared_ptr;
-class ExampleLayer : public Walnut::Layer
+class RayTracing : public Walnut::Layer
 {
 public:
-	ExampleLayer() : m_Camera(45.0f, 0.1f, 100.0f)
+	RayTracing() : m_Camera(20.0f, 0.1f, 100.0f, glm::vec3{13.0f, 2.0f, 3.0f})
 	{
-		auto materialGround = make_shared<Lambertian>("Ground");
-		materialGround->Albedo = {0.8f, 0.8f, 0.0f};
-		materialGround->Roughness = 1.0f;
-		m_Scene.Materials.push_back(materialGround);
-		m_MaterialNames.push_back(materialGround->Name);
-
-		/* auto materialCenter = make_shared<Lambertian>("center sphere");
-		materialCenter->Albedo = {0.7f, 0.3f, 0.3f};
-		materialCenter->Roughness = 1.0f;
-		m_Scene.Materials.push_back(materialCenter);
-		m_MaterialNames.push_back(materialCenter->Name);
-
-		auto materialLeft = make_shared<Metal>("left sphere");
-		materialLeft->Albedo = {0.8f, 0.8f, 0.8f};
-		materialLeft->Fuzz = 0.0f;
-		m_Scene.Materials.push_back(materialLeft);
-		m_MaterialNames.push_back(materialLeft->Name); */
-
-		auto materialCenter = make_shared<Lambertian>("center sphere");
-		materialCenter->Albedo = {0.7f, 0.3f, 0.3f};
-		materialCenter->Roughness = 1.0f;
-		m_Scene.Materials.push_back(materialCenter);
-		m_MaterialNames.push_back(materialCenter->Name);
-
-		auto materialLeft = make_shared<Dielectric>("left sphere");
-		materialLeft->IndexOfRefraction = 1.5f;
-		m_Scene.Materials.push_back(materialLeft);
-		m_MaterialNames.push_back(materialLeft->Name);
-
-		auto materialRight = make_shared<Metal>("right sphere");
-		materialRight->Albedo = {0.8f, 0.6f, 0.2f};
-		materialRight->Fuzz = 0.0f;
-		m_Scene.Materials.push_back(materialRight);
-		m_MaterialNames.push_back(materialRight->Name);
-
-		{
-			auto sphere = make_shared<Sphere>();
-			sphere->Position = {0.0f, -100.5f, -1.0f};
-			sphere->Radius = 100.0f;
-			sphere->MaterialIndex = 0;
-			m_Scene.Hittables.add(sphere);
-		}
-		{
-			auto sphere = make_shared<Sphere>();
-			sphere->Position = {0.0f, 0.0f, -1.0f};
-			sphere->Radius = 0.5f;
-			sphere->MaterialIndex = 1;
-			m_Scene.Hittables.add(sphere);
-		}
-		{
-			auto sphere = make_shared<Sphere>();
-			sphere->Position = {-1.0f, 0.0f, -1.0f};
-			sphere->Radius = 0.5f;
-			sphere->MaterialIndex = 2;
-			m_Scene.Hittables.add(sphere);
-		}
-		{
-			auto sphere = make_shared<Sphere>();
-			sphere->Position = {1.0f, 0.0f, -1.0f};
-			sphere->Radius = 0.5f;
-			sphere->MaterialIndex = 3;
-			m_Scene.Hittables.add(sphere);
-		}
+		GenerateScene();
 	}
 
 	virtual void OnUpdate(float ts) override
@@ -120,7 +58,11 @@ public:
 		ImGui::Begin("Scene");
 		ImGui::Separator();
 		optionsChanged += ImGui::ColorEdit3("Sky Color", &m_Scene.SkyColor.x);
-		ImGui::Separator();
+		/* if (ImGui::Button("Generate Scene"))
+		{
+			GenerateScene();
+		}
+		ImGui::Separator(); */
 		ImGui::Text("Objects");
 		ImGui::Separator();
 		if (ImGui::Button("Add Sphere"))
@@ -220,6 +162,123 @@ public:
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
+	void GenerateScene()
+	{
+		auto materialGround = make_shared<Lambertian>("Ground");
+		materialGround->Albedo = {0.5f, 0.5f, 0.5f};
+		m_Scene.Materials.push_back(materialGround);
+		m_MaterialNames.push_back(materialGround->Name);
+		{
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = {0.0f, -1000.0f, 0.0f};
+			sphere->Radius = 1000.0f;
+			sphere->MaterialIndex = 0;
+			m_Scene.Hittables.add(sphere);
+		}
+
+		int materialIndex = 0;
+		for (int a = -5; a < 5; a++)
+		{
+			for (int b = -5; b < 5; b++)
+			{
+				float choose_mat = Utils::RandomFloat();
+				glm::vec3 center{a + 0.9f * Utils::RandomFloat(), 0.2, b + 0.9f * Utils::RandomFloat()};
+
+				if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9)
+				{
+					materialIndex = m_Scene.Materials.size();
+
+					if (choose_mat < 0.8)
+					{
+						// diffuse
+						auto albedo = Utils::Vec3() * Utils::Vec3();
+						auto sphere_material = make_shared<Lambertian>("Lambertian " + std::to_string(materialIndex));
+						sphere_material->Albedo = albedo;
+						m_Scene.Materials.push_back(sphere_material);
+						m_MaterialNames.push_back(sphere_material->Name);
+						{
+							auto sphere = make_shared<Sphere>();
+							sphere->Position = center;
+							sphere->Radius = 0.2f;
+							sphere->MaterialIndex = materialIndex;
+							m_Scene.Hittables.add(sphere);
+						}
+					}
+					else if (choose_mat < 0.95)
+					{
+						// metal
+						auto albedo = Utils::Vec3(0.5, 1);
+						auto fuzz = Utils::RandomFloat(0, 0.5);
+						auto sphere_material = make_shared<Metal>("Metal " + std::to_string(materialIndex));
+						sphere_material->Albedo = albedo;
+						sphere_material->Fuzz = fuzz;
+						m_Scene.Materials.push_back(sphere_material);
+						m_MaterialNames.push_back(sphere_material->Name);
+						{
+							auto sphere = make_shared<Sphere>();
+							sphere->Position = center;
+							sphere->Radius = 0.2f;
+							sphere->MaterialIndex = materialIndex;
+							m_Scene.Hittables.add(sphere);
+						}
+					}
+					else
+					{
+						// glass
+						auto sphere_material = make_shared<Dielectric>("Dielectric" + std::to_string(materialIndex));
+						sphere_material->IndexOfRefraction = 1.5;
+						m_Scene.Materials.push_back(sphere_material);
+						m_MaterialNames.push_back(sphere_material->Name);
+						{
+							auto sphere = make_shared<Sphere>();
+							sphere->Position = center;
+							sphere->Radius = 0.2f;
+							sphere->MaterialIndex = materialIndex;
+							m_Scene.Hittables.add(sphere);
+						}
+					}
+				}
+			}
+		}
+
+		auto material1 = make_shared<Dielectric>("Dielectric big");
+		material1->IndexOfRefraction = 1.5;
+		m_Scene.Materials.push_back(material1);
+		m_MaterialNames.push_back(material1->Name);
+		{
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = glm::vec3(0, 1, 0);
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = m_Scene.Materials.size() - 1;
+			m_Scene.Hittables.add(sphere);
+		}
+
+		auto material2 = make_shared<Lambertian>("Lambertian big");
+		material2->Albedo = glm::vec3{0.4, 0.2, 0.1};
+		m_Scene.Materials.push_back(material2);
+		m_MaterialNames.push_back(material2->Name);
+		{
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = glm::vec3(-4.0f, 1.0f, 0.0f);
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = m_Scene.Materials.size() - 1;
+			m_Scene.Hittables.add(sphere);
+		}
+
+		auto material3 = make_shared<Metal>("Metal big");
+		material3->Albedo = glm::vec3{0.7, 0.6, 0.5};
+		material3->Fuzz = 0.0f;
+		m_Scene.Materials.push_back(material3);
+		m_MaterialNames.push_back(material3->Name);
+		{
+			auto sphere = make_shared<Sphere>();
+			sphere->Position = glm::vec3(4.0f, 1.0f, 0.0f);
+			sphere->Radius = 1.0f;
+			sphere->MaterialIndex = m_Scene.Materials.size() - 1;
+			m_Scene.Hittables.add(sphere);
+		}
+	}
+
 private:
 	Camera m_Camera;
 	Renderer m_Renderer;
@@ -233,10 +292,10 @@ private:
 Walnut::Application *Walnut::CreateApplication(int argc, char **argv)
 {
 	Walnut::ApplicationSpecification spec;
-	spec.Name = "Walnut Example";
+	spec.Name = "Raytracing";
 
 	Walnut::Application *app = new Walnut::Application(spec);
-	app->PushLayer<ExampleLayer>();
+	app->PushLayer<RayTracing>();
 	app->SetMenubarCallback([app]()
 							{
 		if (ImGui::BeginMenu("File"))

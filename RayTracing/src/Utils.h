@@ -74,10 +74,19 @@ namespace Utils
         float normalized_random = static_cast<float>(random_number) / static_cast<float>(std::numeric_limits<uint32_t>::max());
         return normalized_random;
     }
+    static float RandomFloat(float min, float max)
+    {
+        return RandomFloat() * (max - min) + min;
+    }
 
     static glm::vec3 Vec3()
     {
         return glm::vec3(RandomFloat(), RandomFloat(), RandomFloat());
+    }
+
+    static glm::vec3 Vec3(float min, float max)
+    {
+        return glm::vec3(RandomFloat(min, max), RandomFloat(min, max), RandomFloat(min, max));
     }
 
     static glm::vec3 InUnitSphere()

@@ -7,7 +7,7 @@
 class Camera
 {
 public:
-    Camera(float verticalFOV, float nearClip, float farClip);
+    Camera(float verticalFOV, float nearClip, float farClip, glm::vec3 position);
 
     bool OnUpdate(float ts);
     void OnResize(uint32_t width, uint32_t height);
