@@ -1,7 +1,6 @@
 #include "Renderer.h"
 #include "Utils.h"
 
-
 void Renderer::OnResize(uint32_t width, uint32_t height)
 {
     if (m_FinalImage)
@@ -78,6 +77,12 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
         {
             ray.Direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
         }
+        glm::vec2 inUnitDisk = Utils::InUnitDisk();
+        glm::vec3 offset{inUnitDisk.x * 0.5f * m_ActiveCamera->getAperatureSize(),
+                         inUnitDisk.y * 0.5f * m_ActiveCamera->getAperatureSize(),
+                         0.0f};
+        ray.Origin += offset;
+        ray.Direction = glm::normalize(m_ActiveCamera->getFocusDistance() * ray.Direction - offset);
 
         glm::vec3 contribution(1.0f);
 
@@ -100,8 +105,8 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
 
                 if (material->scatter(ray, payload, attenuation, scatteredDirection))
                 {
-                    //ray.Origin = payload.position + payload.normal * 0.0001f;
-                    //ray.Origin = payload.position + ray.Direction * (-0.0001f);
+                    // ray.Origin = payload.position + payload.normal * 0.0001f;
+                    // ray.Origin = payload.position + ray.Direction * (-0.0001f);
                     ray.Origin = payload.position + scatteredDirection * 0.0001f;
                     ray.Direction = scatteredDirection;
 

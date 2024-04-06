@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "imgui.h"
 #include <vector>
 
 class Camera
@@ -32,6 +33,10 @@ public:
     }
 
     float GetRotationSpeed();
+    bool RenderCameraOptions();
+
+    const float &getAperatureSize() const { return m_AperureSize; }
+    const float &getFocusDistance() const { return m_FocusDistance; }
 
 private:
     void RecalculateProjection();
@@ -47,6 +52,9 @@ private:
     float m_VerticalFOV = 45.0f;
     float m_NearClip = 0.1f;
     float m_FarClip = 100.0f;
+
+    float m_AperureSize = 0.0f;
+    float m_FocusDistance = 10.0f;
 
     glm::vec3 m_Position{0.0f, 0.0f, 0.0f};
     glm::vec3 m_ForwardDirection{0.0f, 0.0f, 0.0f};

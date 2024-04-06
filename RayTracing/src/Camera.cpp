@@ -133,6 +133,7 @@ void Camera::RecalculateRayDirections()
 
             glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, 1, 1);
             glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
+
             m_RayDirections[x + y * m_ViewportWidth] = rayDirection;
         }
     }
@@ -154,4 +155,20 @@ void Camera::GetRayDirectionNearCurrentPosition(uint32_t x, uint32_t y)
     glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
 
     m_RayRandomDirection = rayDirection;
+}
+
+bool Camera::RenderCameraOptions()
+{
+    bool changed = false;
+    changed |= ImGui::DragFloat("Focus Distance", &m_FocusDistance, 0.1f, 0.0f,m_FarClip);
+    changed |= ImGui::DragFloat("Lens Radius", &m_AperureSize, 0.1f, 0.0f, 1000.0f);
+
+    /* if(changed)
+        {
+            RecalculateView();
+            RecalculateProjection();
+            RecalculateRayDirections();
+        } */
+
+    return changed;
 }

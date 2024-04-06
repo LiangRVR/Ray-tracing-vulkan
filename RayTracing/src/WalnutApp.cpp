@@ -42,7 +42,7 @@ public:
 		m_Scene.Materials.push_back(materialCenter);
 		m_MaterialNames.push_back(materialCenter->Name);
 
-			auto materialLeft = make_shared<Dielectric>("left sphere");
+		auto materialLeft = make_shared<Dielectric>("left sphere");
 		materialLeft->IndexOfRefraction = 1.5f;
 		m_Scene.Materials.push_back(materialLeft);
 		m_MaterialNames.push_back(materialLeft->Name);
@@ -70,7 +70,7 @@ public:
 		{
 			auto sphere = make_shared<Sphere>();
 			sphere->Position = {-1.0f, 0.0f, -1.0f};
-			sphere->Radius = -0.4f;
+			sphere->Radius = 0.5f;
 			sphere->MaterialIndex = 2;
 			m_Scene.Hittables.add(sphere);
 		}
@@ -112,6 +112,9 @@ public:
 			optionsChanged += ImGui::DragInt("Samples", &m_Renderer.m_Samples, 0.5f, 1, 100);
 		}
 
+		ImGui::End();
+		ImGui::Begin("Camera");
+		optionsChanged += m_Camera.RenderCameraOptions();
 		ImGui::End();
 
 		ImGui::Begin("Scene");
