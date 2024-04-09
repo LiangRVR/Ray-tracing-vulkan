@@ -1,6 +1,16 @@
 #include "Renderer.h"
 #include "Utils.h"
 
+/**
+ * @brief Resizes the renderer's final image and associated data buffers.
+ *
+ * This function is called when the window is resized. It resizes the final image and associated data buffers
+ * to match the new window dimensions. If the final image already has the same dimensions as the new window,
+ * no resize is performed.
+ *
+ * @param width The new width of the window.
+ * @param height The new height of the window.
+ */
 void Renderer::OnResize(uint32_t width, uint32_t height)
 {
     if (m_FinalImage)
@@ -27,6 +37,16 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
     m_ImageVerticalIter.resize(height);
 }
 
+/**
+ * @brief Renders the scene using the specified camera.
+ *
+ * This function renders the scene using the specified camera. It iterates over each pixel in the final image
+ * and calculates the color of the pixel using the PerPixel function. The color is then accumulated over multiple
+ * frames if the accumulation setting is enabled. The final image is updated with the accumulated color data.
+ *
+ * @param scene The scene to render.
+ * @param camera The camera to use for rendering.
+ */
 void Renderer::Render(const Scene &scene, Camera &camera)
 {
     m_ActiveScene = &scene;
@@ -60,6 +80,29 @@ void Renderer::Render(const Scene &scene, Camera &camera)
         m_FrameIndex = 1;
 }
 
+/**
+ * @brief Calculates the color of a pixel in the final rendered image.
+ *
+ * This function performs ray tracing for a single pixel. It generates a number of rays per pixel
+ * based on the number of samples specified. Each ray is traced through the scene, and the color
+ * contribution from each ray is accumulated to calculate the final color of the pixel.
+ *
+ * If anti-aliasing is enabled, the direction of each ray is randomized slightly to achieve a
+ * smoother final image. If it's not enabled, the direction is determined by the camera's precomputed
+ * ray directions.
+ *
+ * The function also supports depth of field. It offsets the ray's origin within a unit disk to
+ * simulate the effect of a camera's aperture. The direction of the ray is then adjusted based on
+ * the camera's focus distance.
+ *
+ * The function handles ray-object intersections and calculates the color contribution based on the
+ * material of the intersected object. If a ray doesn't hit any object, the sky color is used.
+ *
+ * @param x The x-coordinate of the pixel.
+ * @param y The y-coordinate of the pixel.
+ * @return glm::vec4 The final color of the pixel. The color is a 4-component vector with red, green,
+ * blue, and alpha values.
+ */
 glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
 {
     int numSamples = m_Samples;
@@ -129,6 +172,16 @@ glm::vec4 Renderer::PerPixel(uint32_t x, uint32_t y)
     return glm::vec4(color, 1.0f);
 }
 
+/**
+ * @brief Traces a ray through the scene and returns the closest hit.
+ *
+ * This function traces a ray through the scene and returns the closest hit. It iterates over all objects
+ * in the scene and checks for intersections with the ray. If an intersection is found, the function
+ * returns the closest hit.
+ *
+ * @param ray The ray to trace.
+ * @return HitPayload The closest hit data.
+ */
 HitPayload Renderer::TraceRay(const Ray &ray)
 {
 
@@ -141,6 +194,17 @@ HitPayload Renderer::TraceRay(const Ray &ray)
 
     return ClosestHit(ray, payload);
 }
+
+/**
+ * @brief Finds the closest hit for a ray and updates the hit payload.
+ *
+ * This function finds the closest hit for a ray and updates the hit payload with the new hit data.
+ * It iterates over all objects in the scene and checks for intersections with the ray. If an intersection
+ * is found, the function updates the hit payload with the new hit data.
+ *
+ * @param ray The ray to trace.
+ * @param
+ */
 HitPayload Renderer::ClosestHit(const Ray &ray, HitPayload &payload)
 {
 
@@ -151,6 +215,15 @@ HitPayload Renderer::ClosestHit(const Ray &ray, HitPayload &payload)
     return payload;
 }
 
+/**
+ * @brief Returns the payload for a ray that doesn't hit any object.
+ *
+ * This function returns the payload for a ray that doesn't hit any object. The payload contains
+ * the hit distance set to -1.0f to indicate that the ray missed all objects in the scene.
+ *
+ * @param ray The ray that missed all objects.
+ * @return HitPayload The payload for the miss.
+ */
 HitPayload Renderer::Miss(const Ray &ray)
 {
     HitPayload payload;

@@ -20,7 +20,25 @@ class Lambertian : public Material
 public:
     Lambertian(const std::string &name) : Name(name){};
 
-    virtual bool scatter(Ray rayIn, HitPayload &payload, glm::vec3 &attenuation, glm::vec3 &scatteredDirection) const override
+    /**
+     * @brief Determines how a ray scatters when it hits an object with this material.
+     *
+     * This function is called when a ray hits an object with this material. It calculates the direction
+     * in which the ray is scattered and the attenuation of the ray's color.
+     *
+     * The direction of the scattered ray is determined by adding a random unit vector (scaled by the
+     * material's roughness) to the normal of the hit point. If the resulting direction is too close to
+     * zero, the normal is used as the direction.
+     *
+     * The color of the scattered ray is determined by the material's albedo.
+     *
+     * @param rayIn The incoming ray.
+     * @param payload The hit payload containing information about the hit.
+     * @param attenuation Output parameter for the attenuation of the ray's color.
+     * @param scatteredDirection Output parameter for the direction of the scattered ray.
+     * @return bool Always returns true, indicating that the ray is always scattered.
+     */
+    bool scatter(Ray rayIn, HitPayload &payload, glm::vec3 &attenuation, glm::vec3 &scatteredDirection) const override
     {
 
         glm::vec3 scatteredDirectionTemp = payload.normal + Roughness * Utils::UnitVector();
@@ -52,6 +70,25 @@ class Metal : public Material
 public:
     Metal(const std::string &name) : Name(name){};
 
+    /**
+     * @brief Determines how a ray scatters when it hits an object with this material.
+     *
+     * This function is called when a ray hits an object with this material. It calculates the direction
+     * in which the ray is scattered and the attenuation of the ray's color. This implementation handles
+     * reflection based on the material's fuzziness.
+     *
+     * The direction of the scattered ray is determined by reflecting the incoming ray's direction about
+     * the normal at the hit point, then adding a random vector within a unit sphere scaled by the
+     * material's fuzziness.
+     *
+     * The color of the scattered ray is determined by the material's albedo.
+     *
+     * @param rayIn The incoming ray.
+     * @param payload The hit payload containing information about the hit.
+     * @param attenuation Output parameter for the attenuation of the ray's color. Set to the material's albedo.
+     * @param scatteredDirection Output parameter for the direction of the scattered ray.
+     * @return bool Returns true if the scattered ray is in the same hemisphere as the normal at the hit point; otherwise, returns false.
+     */
     bool scatter(Ray rayIn, HitPayload &payload, glm::vec3 &attenuation, glm::vec3 &scatteredDirection)
         const override
     {
@@ -79,6 +116,25 @@ class Dielectric : public Material
 public:
     Dielectric(const std::string &name) : Name(name){};
 
+    /**
+     * @brief Determines how a ray scatters when it hits an object with this material.
+     *
+     * This function is called when a ray hits an object with this material. It calculates the direction
+     * in which the ray is scattered and the attenuation of the ray's color. This implementation handles
+     * refraction and reflection based on the material's index of refraction.
+     *
+     * The direction of the scattered ray is determined by whether the ray can refract (based on Snell's law)
+     * and the reflectance of the material. If the ray cannot refract or the reflectance is greater than a
+     * random value, the ray is reflected; otherwise, it is refracted.
+     *
+     * The color of the scattered ray is always white (i.e., no color attenuation).
+     *
+     * @param rayIn The incoming ray.
+     * @param payload The hit payload containing information about the hit.
+     * @param attenuation Output parameter for the attenuation of the ray's color. Always set to white.
+     * @param scatteredDirection Output parameter for the direction of the scattered ray.
+     * @return bool Always returns true, indicating that the ray is always scattered.
+     */
     bool scatter(Ray rayIn, HitPayload &payload, glm::vec3 &attenuation, glm::vec3 &scatteredDirection)
         const override
     {
@@ -110,12 +166,13 @@ public:
 
     std::string Name;
     float IndexOfRefraction = 1.5f;
-    private:
-        static float reflectance(float cosine, float ref_idx)
-        {
-            // Use Schlick's approximation for reflectance.
-            auto r0 = (1 - ref_idx) / (1 + ref_idx);
-            r0 = r0 * r0;
-            return r0 + (1 - r0) * pow((1 - cosine), 5);
-        }
+
+private:
+    static float reflectance(float cosine, float ref_idx)
+    {
+        // Use Schlick's approximation for reflectance.
+        auto r0 = (1 - ref_idx) / (1 + ref_idx);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * pow((1 - cosine), 5);
+    }
 };

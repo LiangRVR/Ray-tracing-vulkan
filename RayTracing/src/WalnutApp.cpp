@@ -16,16 +16,31 @@ using std::shared_ptr;
 class RayTracing : public Walnut::Layer
 {
 public:
+
 	RayTracing() : m_Camera(20.0f, 0.1f, 100.0f, glm::vec3{13.0f, 2.0f, 3.0f})
 	{
 		GenerateScene();
 	}
 
+	/**
+	 * @brief Updates the camera and resets the renderer's frame index if necessary.
+	 *
+	 * This function is called every frame and is responsible for updating the state of the camera.
+	 * If the camera's state changes (e.g., due to user input), the renderer's frame index is reset.
+	 *
+	 * @param ts Time since the last frame (delta time).
+	 */
 	virtual void OnUpdate(float ts) override
 	{
 		if (m_Camera.OnUpdate(ts))
 			m_Renderer.ResetFrameIndex();
 	}
+
+	/**
+	 * @brief Renders the scene and updates the UI.
+	 *
+	 * This function is called every frame and is responsible for rendering the scene and updating the UI.
+	 */
 	virtual void OnUIRender() override
 	{
 		int optionsChanged = 0;
@@ -58,11 +73,6 @@ public:
 		ImGui::Begin("Scene");
 		ImGui::Separator();
 		optionsChanged += ImGui::ColorEdit3("Sky Color", &m_Scene.SkyColor.x);
-		/* if (ImGui::Button("Generate Scene"))
-		{
-			GenerateScene();
-		}
-		ImGui::Separator(); */
 		ImGui::Text("Objects");
 		ImGui::Separator();
 		if (ImGui::Button("Add Sphere"))
@@ -151,6 +161,11 @@ public:
 		Render();
 	}
 
+	/**
+	 * @brief Renders the scene.
+	 *
+	 * This function is called when the user clicks the "Render" button or when the scene changes.
+	 */
 	void Render()
 	{
 		Timer timer;
@@ -162,6 +177,11 @@ public:
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
+	/**
+	 * @brief Generates the scene.
+	 *
+	 * This function generates the scene by adding spheres with random materials to the scene.
+	 */
 	void GenerateScene()
 	{
 		auto materialGround = make_shared<Lambertian>("Ground");
@@ -288,6 +308,7 @@ private:
 
 	float m_LastRenderTime = 0.0f;
 };
+
 
 Walnut::Application *Walnut::CreateApplication(int argc, char **argv)
 {
